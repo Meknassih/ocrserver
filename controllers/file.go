@@ -53,11 +53,22 @@ func FileUpload(w http.ResponseWriter, r *http.Request) {
 
 	client.SetImage(tempfile.Name())
 	client.Languages = []string{"eng"}
-	if langs := r.FormValue("languages"); langs != "" {
+	langs := r.FormValue("languages")
+	if langs != "" {
 		client.Languages = strings.Split(langs, ",")
 	}
-	if whitelist := r.FormValue("whitelist"); whitelist != "" {
+	whitelist := r.FormValue("whitelist")
+	if whitelist != "" {
 		client.SetWhitelist(whitelist)
+	}
+	psm := r.FormValue("psm")
+	if psm != "" {
+		if psm == "single_char" {
+			client.SetPageSegMode(gosseract.PSM_SINGLE_CHAR)
+		}
+		if psm == "raw_line" {
+			client.SetPageSegMode(gosseract.PSM_RAW_LINE)
+		}
 	}
 
 	var out string
@@ -75,6 +86,9 @@ func FileUpload(w http.ResponseWriter, r *http.Request) {
 
 	render.JSON(http.StatusOK, map[string]interface{}{
 		"result":  strings.Trim(out, r.FormValue("trim")),
+		"whitelist": whitelist,
+		"languages": langs,
+		"psm": psm,
 		"version": version,
 	})
 }
